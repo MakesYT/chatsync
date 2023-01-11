@@ -1,0 +1,9 @@
+name: chatsync
+main: top.ncserver.chatsync.Chatsync
+version: 1.5.5
+author: MakesYT
+api-version: 1.13
+commands:
+  qqmsg:
+    description: QQ MSG sync
+    usage: /qqmsg
