@@ -47,6 +47,19 @@ public class Writer extends Thread implements Runnable{
     @Override
     public void run() {
         Chatsync.chatsync.getLogger().info("start catch");
+        {
+            Map<String,Object> msg1 = new HashMap<>();
+            msg1.put("type","init");
+            msg1.put("command",Config.INSTANCE.getSyncMsg());
+            JSONObject jo= new JSONObject(msg1);
+            Chatsync.chatsync.getLogger().info(jo.toJSONString());
+            try {
+                send(jo.toJSONString());
+            } catch (InterruptedException | IOException e) {
+                e.printStackTrace();
+                this.stop();
+            }
+        }
              listener= GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, (event) -> {
                  if (Config.INSTANCE.getGroupID()==0L&&event.getSender().getPermission().getLevel()>=1&&event.getMessage().contentToString().equals("/chatsync bind this")){
                      Config.INSTANCE.setGroupID(event.getGroup().getId());
@@ -67,12 +80,24 @@ public class Writer extends Thread implements Runnable{
                         }else
                             if (msgString.startsWith("/")&&!m.lookingAt()){
                             if(event.getSender().getPermission().getLevel()>=1||msgString.equals("/ls")){
-                                msg1.put("type","command");
-                                msg1.put("sender",event.getSenderName()+"("+event.getSender().getId()+")");
-                                msg1.put("command",event.getMessage().contentToString());
-                                JSONObject jo= new JSONObject(msg1);
-                                Chatsync.chatsync.getLogger().info(jo.toJSONString());
-                                send(jo.toJSONString());
+                                boolean baned=false;
+                                String msg=event.getMessage().contentToString();
+                                String command =msg.replaceFirst("/","");
+                                for (String s : Config.INSTANCE.getBanCommand()) {
+                                    if (command.matches(s)) {
+                                        baned = true;
+                                        break;
+                                    }
+                                }
+                                if (!baned) {
+                                    msg1.put("type","command");
+                                    msg1.put("sender",event.getSenderName()+"("+event.getSender().getId()+")");
+                                    msg1.put("command",msg);
+                                    JSONObject jo= new JSONObject(msg1);
+                                    Chatsync.chatsync.getLogger().info(jo.toJSONString());
+                                    send(jo.toJSONString());
+                                }else MsgTools.sendMsg("该命令已被屏蔽");
+
                             }else if (msgString.contains("/LS")||msgString.contains("/IS")||msgString.contains("/Is")){
                                 MsgTools.sendMsg("PS:正确的命令为/ls(均为小写.其大写形式为/LS)");
 
@@ -80,7 +105,7 @@ public class Writer extends Thread implements Runnable{
                                 MsgTools.sendMsg("你无权执行"+msgString);
 
                             }
-                                } else
+                                } else if (Config.INSTANCE.getSyncMsg())
                                 {
                                     msg1.put("type","msg");
                                     msg1.put("permission",event.getSender().getPermission().getLevel());

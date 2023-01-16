@@ -41,9 +41,11 @@ public class Reader extends Thread implements Runnable{
                     JSONObject jsonObject = JSONObject.parseObject(echo);
                     switch (jsonObject.getString("type")){
                         case "msg":
-                            System.out.println("["+jsonObject.getString("sender")+"]:"+jsonObject.getString("msg"));
-                            MsgTools.sendMsg(Config.INSTANCE.getMsgStyle().replaceAll("%s",jsonObject.getString("sender")).replaceAll("%msg",jsonObject.getString("msg")));
-                            break;
+                            if (Config.INSTANCE.getSyncMsg()){
+                                System.out.println("["+jsonObject.getString("sender")+"]:"+jsonObject.getString("msg"));
+                                MsgTools.sendMsg(Config.INSTANCE.getMsgStyle().replaceAll("%s",jsonObject.getString("sender")).replaceAll("%msg",jsonObject.getString("msg")));
+                            }
+                           break;
                         case "playerJoinAndQuit":
                             MsgTools.sendMsg("玩家"+CullColorCode(jsonObject.getString("player"))+jsonObject.getString("msg"));
                             break;

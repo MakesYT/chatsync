@@ -1,6 +1,6 @@
 name: chatsync
 main: top.ncserver.chatsync.Chatsync
-version: 1.5.5
+version: 1.5.6
 author: MakesYT
 api-version: 1.13
 commands:

@@ -11,6 +11,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.simple.JSONObject;
+import top.ncserver.chatsync.Until.Metrics;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -23,6 +24,7 @@ public class Chatsync extends JavaPlugin implements Listener {
     Map<String,Object> msg = new HashMap<>();
     @Override
         public void onEnable() {
+        Metrics metrics = new Metrics(this, 17411);
         Bukkit.getPluginCommand("qqmsg").setExecutor(this);
         Bukkit.getPluginManager().registerEvents(this, this);
             logger.info("聊天同步插件已加载");
@@ -69,6 +71,7 @@ public class Chatsync extends JavaPlugin implements Listener {
         }
         @EventHandler
         public void onChat(AsyncPlayerChatEvent event) throws IOException, InterruptedException {
+
             this.getLogger().info("["+event.getPlayer()+"]:"+event.getMessage());
             msg.clear();
             msg.put("type","msg");

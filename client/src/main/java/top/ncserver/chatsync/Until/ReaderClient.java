@@ -3,6 +3,8 @@ package top.ncserver.chatsync.Until;
 import com.alibaba.fastjson.JSONObject;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
 import top.ncserver.chatsync.Client;
 import top.ncserver.chatsync.Chatsync;
 
@@ -18,12 +20,17 @@ public class ReaderClient extends Thread implements Runnable {
   BufferedReader b;
   Writer out;
 
+  private boolean syncMsg=true;
   public ReaderClient(BufferedReader buf) {
     this.b = buf;
   }
 
   public ReaderClient() {
 
+  }
+
+  public boolean isSyncMsg() {
+    return syncMsg;
   }
 
   public static String getEncode() {
@@ -70,28 +77,36 @@ public class ReaderClient extends Thread implements Runnable {
                       Bukkit.getScheduler().runTask(Chatsync.getPlugin(Chatsync.class), () -> Bukkit.dispatchCommand(sender, cmd));
               });
           }
-        } else {
-          String msg1=null;
-          switch (jsonObject.getInteger("permission")) {
-
-            case 0: {
-              msg1 = "[玩家][" + jsonObject.getString("sender") + "]:" + jsonObject.getString("msg");
-              break;
-            }
-            case 1: {
-              msg1 = "[\u00A7c管理员\u00A7r][" + jsonObject.getString("sender") + "]:" + jsonObject.getString("msg");
-              break;
-            }
-            case 2: {
-              msg1 = "[\u00A76腐竹\u00A7r][" + jsonObject.getString("sender") + "]:" + jsonObject.getString("msg");
-              break;
-            }
-          }
-          Chatsync.getPlugin(Chatsync.class).logger.info(msg1);
-          for (Object player : players) {
-            ((Player) player).getPlayer().sendMessage(msg1);
+        } else if (jsonObject.getString("type").equals("init")){
+          syncMsg= jsonObject.getBoolean("command");
+          if (!syncMsg){
+            HandlerList.unregisterAll((Listener) Chatsync.getPlugin(Chatsync.class));
           }
         }
+        else if (syncMsg)
+          {
+            String msg1=null;
+            switch (jsonObject.getInteger("permission")) {
+
+              case 0: {
+                msg1 = "[玩家][" + jsonObject.getString("sender") + "]:" + jsonObject.getString("msg");
+                break;
+              }
+              case 1: {
+                msg1 = "[\u00A7c管理员\u00A7r][" + jsonObject.getString("sender") + "]:" + jsonObject.getString("msg");
+                break;
+              }
+              case 2: {
+                msg1 = "[\u00A76腐竹\u00A7r][" + jsonObject.getString("sender") + "]:" + jsonObject.getString("msg");
+                break;
+              }
+            }
+            Chatsync.getPlugin(Chatsync.class).logger.info(msg1);
+            for (Object player : players) {
+              ((Player) player).getPlayer().sendMessage(msg1);
+            }
+          }
+
       } catch (IOException | InterruptedException e) {
         System.out.println(e);
         this.stop();

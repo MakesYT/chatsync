@@ -6,12 +6,14 @@ import net.mamoe.mirai.console.command.CommandContext;
 import net.mamoe.mirai.console.command.java.JCompositeCommand;
 import top.ncserver.Chatsync;
 
+import java.util.List;
+
 public final  class ChatsyncCommand extends JCompositeCommand {
 
     public ChatsyncCommand() {
         super(Chatsync.INSTANCE, "chatsync");
 
-        this.setDescription("设置消息同步有关的命令输入/chatsync help获取帮助");
+        this.setDescription("设置消息同步有关的命令输入/help获取帮助");
 
         // ...
     }
@@ -35,5 +37,39 @@ public final  class ChatsyncCommand extends JCompositeCommand {
     public void msgstyle(CommandContext context,String style) {
         Config.INSTANCE.setMsgStyle(style);
         System.out.println("消息格式已更改为"+style);
+    }
+    @Description("设置是否开启消息同步")
+    @SubCommand("syncmsg")
+    public void syncMsg(CommandContext context,boolean f) {
+        Config.INSTANCE.setSyncMsg(f);
+        if (f){
+            System.out.println("已开启消息同步");
+        }else
+            System.out.println("已关闭消息同步");
+    }
+    @Description("设置屏蔽指令(支持正侧表达式)")
+    @SubCommand("bancommand")
+    public void banCommand(CommandContext context,String f,String command) {
+        if (f.equals("add")){
+            List<String> list = Config.INSTANCE.getBanCommand();
+            list.add(command);
+            Config.INSTANCE.setBanCommand(list);
+            System.out.println("当前屏蔽词有(支持正侧表达式):");
+            System.out.println(Config.INSTANCE.getBanCommand());
+        }else if(f.equals("remove")){
+            List<String> list = Config.INSTANCE.getBanCommand();
+            if (list.remove(command)) {
+                Config.INSTANCE.setBanCommand(list);
+                System.out.println("当前屏蔽词有(支持正侧表达式):");
+                System.out.println(Config.INSTANCE.getBanCommand());
+            }else System.out.println("删除失败,屏蔽指令可能不存在");
+        }else if (f.equals("list")){
+            System.out.println("当前屏蔽词有(支持正侧表达式):");
+            System.out.println(Config.INSTANCE.getBanCommand());
+        }else {
+            System.out.println("/chatsync bancommand add");
+            System.out.println("/chatsync bancommand remove");
+            System.out.println("/chatsync bancommand list");
+        }
     }
 }
