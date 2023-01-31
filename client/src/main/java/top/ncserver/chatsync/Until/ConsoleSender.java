@@ -12,6 +12,7 @@ import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.Plugin;
 import top.ncserver.chatsync.Client;
 import top.ncserver.chatsync.Chatsync;
+import top.ncserver.chatsync.V2.Until.MsgTool;
 
 import java.io.IOException;
 import java.util.*;
@@ -37,11 +38,7 @@ public class ConsoleSender implements ConsoleCommandSender {
                 msg.put("type", "command");
                 msg.put("command", output);
                 JSONObject jo = new JSONObject(msg);
-                try {
-                    Client.writer.send(jo.toJSONString());
-                } catch (InterruptedException | IOException e) {
-                    e.printStackTrace();
-                }
+                MsgTool.msgSend(Client.session, jo.toJSONString());
                 this.output.clear();
             }, 4).getTaskId();
         }catch (Exception e) {
@@ -50,11 +47,7 @@ public class ConsoleSender implements ConsoleCommandSender {
             msg.put("sender","命令执行");
             msg.put("command", "命令执行时出现错误\n"+e.getMessage());
             JSONObject jo = new JSONObject(msg);
-            try {
-                Client.writer.send(jo.toJSONString());
-            } catch (InterruptedException | IOException e1) {
-                e1.printStackTrace();
-            }
+            MsgTool.msgSend(Client.session, jo.toJSONString());
         }
 
     }

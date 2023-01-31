@@ -1,34 +1,43 @@
 package top.ncserver;
 
+import com.alibaba.fastjson.JSONObject;
 import net.mamoe.mirai.Bot;
-import net.mamoe.mirai.console.command.Command;
 import net.mamoe.mirai.console.command.CommandManager;
 import net.mamoe.mirai.console.plugin.jvm.JavaPlugin;
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescriptionBuilder;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.BotOfflineEvent;
 import net.mamoe.mirai.event.events.BotOnlineEvent;
-import top.ncserver.chatsync.Server;
-import top.ncserver.chatsync.Until.ChatsyncCommand;
-import top.ncserver.chatsync.Until.Config;
-import top.ncserver.chatsync.Until.MsgTools;
-import top.ncserver.chatsync.Until.ServerOffineTool;
+import net.mamoe.mirai.message.data.Face;
+import net.mamoe.mirai.message.data.PlainText;
+import org.smartboot.socket.StateMachineEnum;
+import org.smartboot.socket.extension.plugins.HeartPlugin;
+import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
+import org.smartboot.socket.transport.AioQuickServer;
+import org.smartboot.socket.transport.AioSession;
+import org.smartboot.socket.transport.WriteBuffer;
+import top.ncserver.chatsync.Until.*;
+import top.ncserver.chatsync.V2.MsgTools;
 
+import java.io.File;
 import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public final class Chatsync extends JavaPlugin {
     public static final Chatsync INSTANCE = new Chatsync();
 
     private Chatsync() {
-        super(new JvmPluginDescriptionBuilder("top.ncserver.chatsync", "0.1.4")
+        super(new JvmPluginDescriptionBuilder("top.ncserver.chatsync", "0.2.0")
                 .name("chatsync")
                 .author("makesyt")
                 .build());
     }
     public static  Bot bot;
     public static  Chatsync chatsync;
+    public  static AioSession session;
+    public boolean isConnected = false;
     @Override
     public void onEnable() {
         chatsync=this;
@@ -40,7 +49,12 @@ public final class Chatsync extends JavaPlugin {
         ServerOffineTool.init();
         GlobalEventChannel.INSTANCE.subscribeAlways(BotOnlineEvent.class, (event) -> {
             bot= Bot.getInstances().get(0);
-            MsgTools.sendMsg("消息同步QQ侧已加载");
+            try {
+                File file = TextToImg.toImg("消息同步QQ侧已加载,当前JDK版本:"+System.getProperty ("java.version"));
+                MsgTools.QQsendImg(file);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
         });
         GlobalEventChannel.INSTANCE.subscribeAlways(BotOfflineEvent.class, (event) -> {
@@ -48,29 +62,84 @@ public final class Chatsync extends JavaPlugin {
         });
         if ( Bot.getInstances().size()>0){
             bot= Bot.getInstances().get(0);
-            MsgTools.sendMsg("消息同步QQ侧已加载");
+
+
+            try {
+                File file = TextToImg.toImg("消息同步QQ侧已加载");
+                MsgTools.QQsendImg(file);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
         }
 
         new Thread(() -> {
-            Socket client = null;
-            ServerSocket server = null;
+            AbstractMessageProcessor<String> processor = new AbstractMessageProcessor<String>() {
+                @Override
+                public void process0(AioSession aioSession, String s) {
+                    try {
+                        MsgTools.msgRead(aioSession,s);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+
+                @Override
+                public void stateEvent0(AioSession aioSession, StateMachineEnum stateMachineEnum, Throwable throwable) {
+                    if (stateMachineEnum.equals(StateMachineEnum.NEW_SESSION)){
+
+                        session = aioSession;
+                        if (bot!=null){
+                            MsgTools.QQsendMsgMessageChain(new PlainText("服务器有了,别问我几个月的,我也不知道").plus(new Face(178)));
+                        }
+                        {
+                            Map<String,Object> msg1 = new HashMap<>();
+                            msg1.put("type","init");
+                            msg1.put("command",Config.INSTANCE.getSyncMsg());
+                            JSONObject jo= new JSONObject(msg1);
+                            Chatsync.chatsync.getLogger().info(jo.toJSONString());
+                            try {
+                                WriteBuffer writeBuffer = session.writeBuffer();
+                                byte[] content = jo.toJSONString().getBytes();
+                                writeBuffer.writeInt(content.length);
+                                writeBuffer.write(content);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+
+                            }
+                        }
+                        isConnected=true;
+                    }else if (stateMachineEnum.equals(StateMachineEnum.SESSION_CLOSED)){
+                        if (bot!=null){
+                            MsgTools.QQsendMsgMessageChain(new PlainText("服务器没了,等重启吧").plus(new Face(173)).plus(new Face(174)));
+                        }
+                        isConnected=false;
+                    }
+                }
+            };
+            processor.addPlugin(new HeartPlugin<String>(10, 30, TimeUnit.SECONDS) {
+                @Override
+                public void sendHeartRequest(AioSession session) throws IOException {
+                    WriteBuffer writeBuffer = session.writeBuffer();
+                    byte[] content = "heart message".getBytes();
+                    writeBuffer.writeInt(content.length);
+                    writeBuffer.write(content);
+                }
+
+                @Override
+                public boolean isHeartMessage(AioSession session, String msg) {
+                    return "heart message".equals(msg);
+                }
+            });
+
+            AioQuickServer server = new AioQuickServer(Config.INSTANCE.getPort(), new StringProtocol(), processor);
             try {
-                server = new ServerSocket(Config.INSTANCE.getPort());
+                server.start();
+
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            while(true){
-                //等待客户端的连接，如果没有获取连接
-                try {
-                    client = server.accept();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
 
-                //为每个客户端连接开启一个线程
-                new Thread(new Server(client)).start();
-            }
         }, "MyThread").start();
     }
 

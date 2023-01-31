@@ -8,6 +8,7 @@ import org.bukkit.command.CommandSender;
 import org.json.simple.JSONObject;
 import top.ncserver.chatsync.Client;
 import top.ncserver.chatsync.Chatsync;
+import top.ncserver.chatsync.V2.Until.MsgTool;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -24,11 +25,7 @@ public class Command implements CommandExecutor {
 		msg.put("msg",command);
 
 		JSONObject jo= new JSONObject(msg);
-		try {
-			Client.writer.send(jo.toJSONString());
-		} catch (InterruptedException | IOException e) {
-			e.printStackTrace();
-		}
+		MsgTool.msgSend(Client.session, jo.toJSONString());
 		return true;
 	}
 }

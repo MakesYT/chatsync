@@ -18,6 +18,11 @@
             <artifactId>fastjson</artifactId>
             <version>2.0.22</version>
         </dependency>
+        <dependency>
+            <groupId>org.smartboot.socket</groupId>
+            <artifactId>aio-pro</artifactId>
+            <version>1.6.1</version>
+        </dependency>
     </dependencies>
 
 </project>

@@ -1,5 +1,7 @@
 package top.ncserver.chatsync.Until;
 
+
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -7,20 +9,22 @@ import java.io.File;
 import java.io.IOException;
 
 public class TextToImg {
+
     public static File toImg(String text) throws IOException {
         String[] strings =text.split("\n");
         int minX=0;
 
         Font font =null;
         try {
-            font= Font.createFont(Font.TRUETYPE_FONT, TextToImg.class.getResource("/MiSans-Normal.ttf").openStream());
+            font= Font.createFont(Font.TRUETYPE_FONT, TextToImg.class.getResourceAsStream("/MiSans-Normal.ttf"));
             font=font.deriveFont(64F);
         } catch (FontFormatException e) {
             throw new RuntimeException(e);
         }
         for (String line: strings) {
             line=line.replaceAll("§\\S", "");
-            FontMetrics fm = sun.font.FontDesignMetrics.getMetrics(font);
+            //font.getLineMetrics(line)
+            FontMetrics fm = Toolkit.getDefaultToolkit().getFontMetrics(font);
             int result = fm.stringWidth(line);
 
             if (minX<result) minX=result;
@@ -105,7 +109,7 @@ public class TextToImg {
                 }else {
                     String b=Character.toString(nowLine.charAt(j));
                     g.drawString(String.valueOf(nowLine.charAt(dex)), nowX, i>0?68+(i)*68+(i)*16:68);
-                    FontMetrics fm = sun.font.FontDesignMetrics.getMetrics(font);
+                    FontMetrics fm = Toolkit.getDefaultToolkit().getFontMetrics(font);
                     nowX+= fm.charWidth(nowLine.charAt(dex));
                     dex++;
                 }

@@ -6,6 +6,7 @@ import net.mamoe.mirai.event.Listener;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.PlainText;
 import top.ncserver.Chatsync;
+import top.ncserver.chatsync.V2.MsgTools;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,15 +23,15 @@ public class ServerOffineTool {
         listener= GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, (event) -> {
             if (Config.INSTANCE.getGroupID()==0L&&event.getSender().getPermission().getLevel()>=1&&event.getMessage().contentToString().equals("/chatsync bind this")){
                 Config.INSTANCE.setGroupID(event.getGroup().getId());
-                MsgTools.sendMsg("消息同步已绑定到此群");
+                MsgTools.QQsendMsg("消息同步已绑定到此群");
 
             }else
             if (event.getGroup().getId()==Config.INSTANCE.getGroupID()){
                 String msg=event.getMessage().contentToString();
                 if (msg.contains("/ls")||msg.contains("/list")) {
-                    MsgTools.sendMsg("抱歉,服务器处于离线状态");
+                    MsgTools.QQsendMsg("抱歉,服务器处于离线状态");
                 }else if (msg.contains("/LS")||msg.contains("/IS")||msg.contains("/Is")){
-                    MsgTools.sendMsg("抱歉,服务器处于离线状态\nPS:正确的命令为/ls(均为小写.其大写形式为/LS)");
+                    MsgTools.QQsendMsg("抱歉,服务器处于离线状态\nPS:正确的命令为/ls(均为小写.其大写形式为/LS)");
                 }else if (msg.contains("%test")){
                     File file= null;
                     try {
@@ -42,7 +43,7 @@ public class ServerOffineTool {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                    MsgTools.sendImg(file);
+                    MsgTools.QQsendImg(file);
                 }
             }
 

@@ -4,91 +4,99 @@ package top.ncserver.chatsync;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
-import top.ncserver.chatsync.Until.ReaderClient;
-import top.ncserver.chatsync.Until.Writer;
+import org.smartboot.socket.MessageProcessor;
+import org.smartboot.socket.StateMachineEnum;
+import org.smartboot.socket.extension.plugins.HeartPlugin;
+import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
+import org.smartboot.socket.transport.AioQuickClient;
+import org.smartboot.socket.transport.AioSession;
+import org.smartboot.socket.transport.WriteBuffer;
+import top.ncserver.chatsync.V2.Until.MsgTool;
+import top.ncserver.chatsync.V2.Until.StringProtocol;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.Socket;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 public class Client extends BukkitRunnable {
-    public static Writer writer;
-    public static ReaderClient reader;
-    public static Socket client;
-    public static  void connection(String host, int port)
-    {
+    public static AioSession session;
+    public static boolean isConnected=false;
+    public static Logger logger=Chatsync.getPlugin(Chatsync.class).getLogger();
+    public static YamlConfiguration config;
+    public static void connection(String host, int port) {
         try {
-            reader=new ReaderClient();
-            writer=new Writer();
-              client = new Socket(host, port);
-            while(!client.isConnected()){}
-            System.out.println("连接成功");
-            //System.out.println("§4警告:消息同步连接丢失,请稍后再试或者联系管理员解决");
-            Object[] players = Chatsync.getPlugin(Chatsync.class).getServer().getOnlinePlayers().toArray();
-            for (Object player : players) {
-                ((Player) player).getPlayer().sendMessage("消息同步连接成功");
-            }
-             writer=new Writer(client);
-             reader=new ReaderClient(client,writer);
-            reader.start();
-            writer.start();
-            while(client.isConnected()&&reader.isAlive()&&writer.isAlive()){
-                //锁线程
-                Thread.sleep(50);
-            }
-            if (!reader.isAlive())
-                System.out.println("reader crash");
-            if (!writer.isAlive())
-                System.out.println("writer crash");
-            System.out.println("连接丢失,重新连接");
-            for (Object player : players) {
-                ((Player) player).getPlayer().sendMessage("§4警告:消息同步连接丢失");
-            }
-            reader.stop();
-            writer.stop();
-            client.close();
-        } catch (IOException | InterruptedException e) {
-            //System.out.println(e);
-            //System.out.println("连接失败");
+            AbstractMessageProcessor<String> processor = new AbstractMessageProcessor<String>(){
+                @Override
+                public void process0(AioSession aioSession, String msg) {
+                    try {
+                        if (msg.equals("heart message")){
+                            MsgTool.msgSend(session,"heart message");
+                        }else
+                            MsgTool.msgRead(session, msg);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                @Override
+                public void stateEvent0(AioSession session, StateMachineEnum stateMachineEnum, Throwable throwable) {
+                    if (stateMachineEnum.equals(StateMachineEnum.NEW_SESSION)){
+                        isConnected=true;
+                        logger.info("连接成功");
+                        Object[] players = Chatsync.getPlugin(Chatsync.class).getServer().getOnlinePlayers().toArray();
+                        for (Object player : players) {
+                            ((Player) player).getPlayer().sendMessage("消息同步连接成功");
+                        }
+                    }else if (stateMachineEnum.equals(StateMachineEnum.SESSION_CLOSED)){
+                        logger.warning("连接丢失");
+                        isConnected=false;
+                        new BukkitRunnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                while (!isConnected){
+
+                                    try {
+                                        Thread.sleep(5000);
+                                    } catch (InterruptedException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                    connection(config.getString("ip"), config.getInt("port"));
+                                }
+                                //logger.info("2");
+                                this.cancel();
+                            }
+                        }.runTaskAsynchronously(Chatsync.getPlugin(Chatsync.class));
+                    }
+                }
+            };
+
+            AioQuickClient client = new AioQuickClient(host, port, new StringProtocol(), processor);
+            session = client.start();
+
+
+        } catch (IOException ignored) {
+
+
         }
 
     }
-    public static void copyFile(InputStream inputStream, File file) {
-        try {
-            FileOutputStream fileOutputStream = new FileOutputStream(file);
-            byte[] arrayOfByte = new byte[63];
-            int i;
-            while ((i = inputStream.read(arrayOfByte)) > 0) {
-                fileOutputStream.write(arrayOfByte, 0, i);
-            }
-            fileOutputStream.close();
-            inputStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+
     @Override
     public void run() {
-        YamlConfiguration config = new YamlConfiguration();
         File configFile = new File(Chatsync.getPlugin(Chatsync.class).getDataFolder(), "config.yml");
-        if (!configFile.exists()) {
-            configFile.getParentFile().mkdirs();
-            copyFile(Chatsync.getPlugin(Chatsync.class).getResource("config.yml"), configFile);
-
-            Chatsync.getPlugin(Chatsync.class).getLogger().info("File: 已生成 config.yml 文件");
-        }
         config = YamlConfiguration.loadConfiguration(configFile);
-        while(Chatsync.getPlugin(Chatsync.class).isEnabled())
-        {
-            connection(config.getString("ip"), config.getInt("port"));
+        while (!isConnected){
 
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException e) {
-                System.out.println(e);
+                throw new RuntimeException(e);
             }
+            connection(config.getString("ip"), config.getInt("port"));
         }
+        //logger.info("1");
+        this.cancel();
     }
 }
