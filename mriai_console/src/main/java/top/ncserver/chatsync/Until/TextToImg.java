@@ -7,9 +7,10 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 public class TextToImg {
-
     public static File toImg(String text) throws IOException {
         String[] strings =text.split("\n");
         int minX=0;
@@ -22,6 +23,8 @@ public class TextToImg {
             throw new RuntimeException(e);
         }
         for (String line: strings) {
+
+            line=line.replaceAll("ﾧ\\S", "");
             line=line.replaceAll("§\\S", "");
             //font.getLineMetrics(line)
             FontMetrics fm = Toolkit.getDefaultToolkit().getFontMetrics(font);
@@ -47,7 +50,7 @@ public class TextToImg {
             int nowX=32;
 
             for (int j = 0; j < nowLine.length(); j++) {
-                if (nowLine.charAt(j)=='§'){
+                if (nowLine.charAt(j)=='ﾧ'||nowLine.charAt(j)=='§'){
                     switch (nowLine.charAt(j+1)){
                         case '0':
                             g.setColor(Color.black);

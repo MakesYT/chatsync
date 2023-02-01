@@ -1,7 +1,5 @@
 package top.ncserver.chatsync.Until;
 
-import kotlin.ParameterName;
-import net.mamoe.mirai.console.command.Command;
 import net.mamoe.mirai.console.command.CommandContext;
 import net.mamoe.mirai.console.command.java.JCompositeCommand;
 import top.ncserver.Chatsync;

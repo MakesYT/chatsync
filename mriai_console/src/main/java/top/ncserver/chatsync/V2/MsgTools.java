@@ -1,6 +1,7 @@
 package top.ncserver.chatsync.V2;
 
 import com.alibaba.fastjson.JSONObject;
+import kotlin.text.Charsets;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
 import net.mamoe.mirai.message.data.At;
@@ -25,16 +26,15 @@ import static top.ncserver.Chatsync.bot;
 import static top.ncserver.chatsync.Until.ColorCodeCulling.CullColorCode;
 
 public class MsgTools {
-    Pattern p = Pattern.compile("[(/+)\u4e00-\u9fa5(+*)]");
-    public void listenerInit(){
+    static Pattern p = Pattern.compile("[(/+)\u4e00-\u9fa5(+*)]");
+    public static void listenerInit(){
         GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, (event) -> {
             if (Config.INSTANCE.getGroupID()==0L&&event.getSender().getPermission().getLevel()>=1&&event.getMessage().contentToString().equals("/chatsync bind this")){
                 Config.INSTANCE.setGroupID(event.getGroup().getId());
                 QQsendMsg("消息同步已绑定到此群");
 
-            }else
-            if (event.getGroup().getId()==Config.INSTANCE.getGroupID()) {
-                try {
+            }else if (Chatsync.INSTANCE.isConnected){
+                if (event.getGroup().getId()==Config.INSTANCE.getGroupID()) {
                     Map<String,Object> msg1 = new HashMap<>();
                     String msgString=event.getMessage().contentToString();
                     // msgString=msgString.replaceAll("\")
@@ -62,7 +62,7 @@ public class MsgTools {
                                 msg1.put("command",msg);
                                 JSONObject jo= new JSONObject(msg1);
                                 Chatsync.chatsync.getLogger().info(jo.toJSONString());
-                                msgRead(Chatsync.session,jo.toJSONString());
+                                msgSend(Chatsync.session,jo.toJSONString());
                             }else QQsendMsg("该命令已被屏蔽");
 
                         }else if (msgString.contains("/LS")||msgString.contains("/IS")||msgString.contains("/Is")){
@@ -108,47 +108,73 @@ public class MsgTools {
                         msgSend(Chatsync.session,jo.toJSONString());
                     }
 
-                } catch (IOException e) {
-                    e.printStackTrace();
+                }
+            }else{
+                if (Config.INSTANCE.getGroupID()==0L&&event.getSender().getPermission().getLevel()>=1&&event.getMessage().contentToString().equals("/chatsync bind this")){
+                    Config.INSTANCE.setGroupID(event.getGroup().getId());
+                    MsgTools.QQsendMsg("消息同步已绑定到此群");
 
+                }else
+                if (event.getGroup().getId()==Config.INSTANCE.getGroupID()){
+                    String msg=event.getMessage().contentToString();
+                    if (msg.contains("/ls")||msg.contains("/list")) {
+                        MsgTools.QQsendMsg("抱歉,服务器处于离线状态");
+                    }else if (msg.contains("/LS")||msg.contains("/IS")||msg.contains("/Is")){
+                        MsgTools.QQsendMsg("抱歉,服务器处于离线状态\nPS:正确的命令为/ls(均为小写.其大写形式为/LS)");
+                    }else if (msg.contains("%test")){
+                        File file= null;
+                        try {
+                            file = TextToImg.toImg("------ ======= Help ======= ------\n/actionbarmsg [玩家名称/all" +
+                                    "] (-s:[秒]) [消息] - 给玩家发送actionbar消息\n/afk (-p:玩家名称) (原因) (-s) - 切换离开模式,可提供原因\n/afkcheck" +
+                                    " [玩家名称/all] - 检查玩家离开状态\n/air [玩家名称] [空气值] (-s) - 设置玩家空气值\n/alert [玩家名称] (原因" +
+                                    ") - 当玩家登录时提醒管理\n/alertlist - 列出所有记录的提醒\\n/aliaseditor (new) (alias-cmd) - 指令简写" +
+                                    "编辑\nFor next page perform cmi ? 2\n");
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                        MsgTools.QQsendImg(file);
+                    }
                 }
             }
+
         });
     }
     public static void msgRead(AioSession session, String msgJ) throws IOException {
         if (bot!=null){
             System.out.println(msgJ);
             JSONObject jsonObject = JSONObject.parseObject(msgJ);
-            switch (jsonObject.getString("type")){
-                case "msg":
-                    if (Config.INSTANCE.getSyncMsg()){
-                        System.out.println("["+jsonObject.getString("sender")+"]:"+jsonObject.getString("msg"));
-                        QQsendMsg(Config.INSTANCE.getMsgStyle().replaceAll("%s",jsonObject.getString("sender")).replaceAll("%msg",jsonObject.getString("msg")));
-                    }
-                    break;
-                case "playerJoinAndQuit":
-                    QQsendMsg("玩家"+CullColorCode(jsonObject.getString("player"))+jsonObject.getString("msg"));
-                    break;
-                case "playerList":
-                    QQsendMsg("当前有"+jsonObject.getString("online")+"位玩家在线\n"+jsonObject.getString("msg"));
-                    break;
-                case "command":
-                    QQsendMsg("接收到命令回馈,正在渲染图片");
-                    long start = System.currentTimeMillis();
-                    File file= TextToImg.toImg(jsonObject.getString("command"));
-                    long finish = System.currentTimeMillis();
-                    long timeElapsed = finish - start;
-                    QQsendMsg("完成,耗时"+timeElapsed+"ms,上传中");
-                    QQsendImg(file);
-                    System.gc();
-                    break;
-                case "serverCommand":
-                    QQsendMsg("注意服务器执行："+jsonObject.getString("command")+"\n注意服务器安全");
-                    break;
-                case "playerDeath":
-                case "obRe":
-                   QQsendMsg(CullColorCode(jsonObject.getString("msg")));
-                    break;
+            if (Chatsync.INSTANCE.isConnected){
+                switch (jsonObject.getString("type")){
+                    case "msg":
+                        if (Config.INSTANCE.getSyncMsg()){
+                            System.out.println("["+jsonObject.getString("sender")+"]:"+jsonObject.getString("msg"));
+                            QQsendMsg(Config.INSTANCE.getMsgStyle().replaceAll("%s",jsonObject.getString("sender")).replaceAll("%msg",jsonObject.getString("msg")));
+                        }
+                        break;
+                    case "playerJoinAndQuit":
+                        QQsendMsg("玩家"+CullColorCode(jsonObject.getString("player"))+jsonObject.getString("msg"));
+                        break;
+                    case "playerList":
+                        QQsendMsg("当前有"+jsonObject.getString("online")+"位玩家在线\n"+jsonObject.getString("msg"));
+                        break;
+                    case "command":
+                        QQsendMsg("接收到命令回馈,正在渲染图片");
+                        long start = System.currentTimeMillis();
+                        File file= TextToImg.toImg(jsonObject.getString("command"));
+                        long finish = System.currentTimeMillis();
+                        long timeElapsed = finish - start;
+                        QQsendMsg("完成,耗时"+timeElapsed+"ms,上传中");
+                        QQsendImg(file);
+                        System.gc();
+                        break;
+                    case "serverCommand":
+                        QQsendMsg("注意服务器执行："+jsonObject.getString("command")+"\n注意服务器安全");
+                        break;
+                    case "playerDeath":
+                    case "obRe":
+                        QQsendMsg(CullColorCode(jsonObject.getString("msg")));
+                        break;
+                }
             }
 
         }
@@ -157,9 +183,10 @@ public class MsgTools {
     public static void msgSend(AioSession session, String msg) {
         try {
             WriteBuffer writeBuffer = session.writeBuffer();
-            byte[] content = msg.getBytes();
+            byte[] content = msg.getBytes(Charsets.UTF_8);
             writeBuffer.writeInt(content.length);
             writeBuffer.write(content);
+            writeBuffer.flush();
         }catch (IOException e) {
 
         }

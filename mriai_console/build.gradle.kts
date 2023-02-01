@@ -11,8 +11,8 @@ plugins {
 }
 
 group = "top.ncserver"
-version = "0.2.0"
-mirai.jvmTarget=org.gradle.api.JavaVersion.VERSION_11
+version = "0.2.2"
+mirai.jvmTarget=JavaVersion.VERSION_11
 
 repositories {
     maven("https://maven.aliyun.com/repository/public")

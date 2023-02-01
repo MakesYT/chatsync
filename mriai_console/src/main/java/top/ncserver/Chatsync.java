@@ -13,6 +13,7 @@ import net.mamoe.mirai.message.data.PlainText;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.plugins.HeartPlugin;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
+import org.smartboot.socket.extension.protocol.StringProtocol;
 import org.smartboot.socket.transport.AioQuickServer;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.transport.WriteBuffer;
@@ -29,7 +30,7 @@ public final class Chatsync extends JavaPlugin {
     public static final Chatsync INSTANCE = new Chatsync();
 
     private Chatsync() {
-        super(new JvmPluginDescriptionBuilder("top.ncserver.chatsync", "0.2.0")
+        super(new JvmPluginDescriptionBuilder("top.ncserver.chatsync", "0.2.2")
                 .name("chatsync")
                 .author("makesyt")
                 .build());
@@ -46,7 +47,7 @@ public final class Chatsync extends JavaPlugin {
         getLogger().info("Plugin loaded!");
         bot = null;
         getLogger().info("机器人加载完成,开始在127.0.0.1:"+Config.INSTANCE.getPort()+"创建socke服务器");
-        ServerOffineTool.init();
+        MsgTools.listenerInit();
         GlobalEventChannel.INSTANCE.subscribeAlways(BotOnlineEvent.class, (event) -> {
             bot= Bot.getInstances().get(0);
             try {
@@ -87,7 +88,6 @@ public final class Chatsync extends JavaPlugin {
                 @Override
                 public void stateEvent0(AioSession aioSession, StateMachineEnum stateMachineEnum, Throwable throwable) {
                     if (stateMachineEnum.equals(StateMachineEnum.NEW_SESSION)){
-
                         session = aioSession;
                         if (bot!=null){
                             MsgTools.QQsendMsgMessageChain(new PlainText("服务器有了,别问我几个月的,我也不知道").plus(new Face(178)));
@@ -103,6 +103,7 @@ public final class Chatsync extends JavaPlugin {
                                 byte[] content = jo.toJSONString().getBytes();
                                 writeBuffer.writeInt(content.length);
                                 writeBuffer.write(content);
+                                writeBuffer.flush();
                             } catch (IOException e) {
                                 e.printStackTrace();
 
@@ -117,20 +118,6 @@ public final class Chatsync extends JavaPlugin {
                     }
                 }
             };
-            processor.addPlugin(new HeartPlugin<String>(10, 30, TimeUnit.SECONDS) {
-                @Override
-                public void sendHeartRequest(AioSession session) throws IOException {
-                    WriteBuffer writeBuffer = session.writeBuffer();
-                    byte[] content = "heart message".getBytes();
-                    writeBuffer.writeInt(content.length);
-                    writeBuffer.write(content);
-                }
-
-                @Override
-                public boolean isHeartMessage(AioSession session, String msg) {
-                    return "heart message".equals(msg);
-                }
-            });
 
             AioQuickServer server = new AioQuickServer(Config.INSTANCE.getPort(), new StringProtocol(), processor);
             try {

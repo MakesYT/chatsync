@@ -4,19 +4,15 @@ package top.ncserver.chatsync;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.smartboot.socket.MessageProcessor;
 import org.smartboot.socket.StateMachineEnum;
-import org.smartboot.socket.extension.plugins.HeartPlugin;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
+import org.smartboot.socket.extension.protocol.StringProtocol;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.transport.AioSession;
-import org.smartboot.socket.transport.WriteBuffer;
 import top.ncserver.chatsync.V2.Until.MsgTool;
-import top.ncserver.chatsync.V2.Until.StringProtocol;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class Client extends BukkitRunnable {
@@ -29,8 +25,10 @@ public class Client extends BukkitRunnable {
             AbstractMessageProcessor<String> processor = new AbstractMessageProcessor<String>(){
                 @Override
                 public void process0(AioSession aioSession, String msg) {
+                    //logger.info(msg);
                     try {
                         if (msg.equals("heart message")){
+                            logger.info("heart message");
                             MsgTool.msgSend(session,"heart message");
                         }else
                             MsgTool.msgRead(session, msg);

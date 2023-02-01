@@ -1,6 +1,7 @@
 package top.ncserver.chatsync.V2.Until;
 
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.base.Charsets;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
@@ -34,12 +35,7 @@ public class MsgTool {
                     msg.put("msg", list.substring(5));
                 } else msg.put("msg", "无,惨兮兮");
                 JSONObject jo = new JSONObject(msg);
-                WriteBuffer writeBuffer = session.writeBuffer();
-                byte[] data = jo.toJSONString().getBytes();
-                writeBuffer.writeInt(data.length);
-                writeBuffer.write(data);
-                writeBuffer.flush();
-                writeBuffer.close();
+                msgSend(session,jo.toJSONString());
             } else {
                 Chatsync.getPlugin(Chatsync.class).logger.info("QQ群[" + jsonObject.getString("sender") + "]执行了" + jsonObject.getString("command"));
                 msg.put("type", "command");
@@ -84,16 +80,15 @@ public class MsgTool {
         if (Client.isConnected)
             try{
                 WriteBuffer writeBuffer = session.writeBuffer();
-                byte[] data = msg.getBytes();
+                byte[] data = msg.getBytes(Charsets.UTF_8);
                 writeBuffer.writeInt(data.length);
                 writeBuffer.write(data);
                 writeBuffer.flush();
             }catch (IOException e){
 
-            }
-        else{
 
-        }
+
+            }
 
 
     }

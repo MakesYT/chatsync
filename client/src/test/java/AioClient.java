@@ -1,14 +1,11 @@
-import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.smartboot.socket.StateMachineEnum;
 import org.smartboot.socket.extension.plugins.HeartPlugin;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
+import org.smartboot.socket.extension.protocol.StringProtocol;
 import org.smartboot.socket.transport.AioQuickClient;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.transport.WriteBuffer;
-import top.ncserver.chatsync.Chatsync;
 import top.ncserver.chatsync.V2.Until.MsgTool;
-import top.ncserver.chatsync.V2.Until.StringProtocol;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -64,10 +61,12 @@ public class AioClient {
             processor.addPlugin(new HeartPlugin<String>(5, 9, TimeUnit.SECONDS) {
                 @Override
                 public void sendHeartRequest(AioSession session) throws IOException {
+                    System.out.println(1);
                     WriteBuffer writeBuffer = session.writeBuffer();
                     byte[] content = "heart message".getBytes();
                     writeBuffer.writeInt(content.length);
                     writeBuffer.write(content);
+                    writeBuffer.flush();
                 }
 
                 @Override

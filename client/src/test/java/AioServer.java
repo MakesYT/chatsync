@@ -1,12 +1,10 @@
-import org.smartboot.socket.MessageProcessor;
 import org.smartboot.socket.StateMachineEnum;
-import org.smartboot.socket.buffer.BufferPagePool;
 import org.smartboot.socket.extension.plugins.HeartPlugin;
 import org.smartboot.socket.extension.processor.AbstractMessageProcessor;
+import org.smartboot.socket.extension.protocol.StringProtocol;
 import org.smartboot.socket.transport.AioQuickServer;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.transport.WriteBuffer;
-import top.ncserver.chatsync.V2.Until.StringProtocol;
 
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
@@ -24,9 +22,11 @@ public class AioServer {
 
             }
         };
-        processor.addPlugin(new HeartPlugin<String>(10, 30, TimeUnit.SECONDS) {
+
+        processor.addPlugin(new HeartPlugin<String>(5, 9, TimeUnit.SECONDS) {
             @Override
             public void sendHeartRequest(AioSession session) throws IOException {
+                System.out.println(1);
                 WriteBuffer writeBuffer = session.writeBuffer();
                 byte[] content = "heart message".getBytes();
                 writeBuffer.writeInt(content.length);
@@ -35,10 +35,9 @@ public class AioServer {
 
             @Override
             public boolean isHeartMessage(AioSession session, String msg) {
-                return "heart message".equals(msg);
+                return "heart messageS".equals(msg);
             }
         });
-
         AioQuickServer server = new AioQuickServer(1111, new StringProtocol(), processor);
         server.start();
     }
