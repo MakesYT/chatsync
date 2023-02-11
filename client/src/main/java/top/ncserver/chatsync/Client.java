@@ -28,7 +28,7 @@ public class Client extends BukkitRunnable {
                     //logger.info(msg);
                     try {
                         if (msg.equals("heart message")){
-                            logger.info("heart message");
+                            //logger.info("heart message");
                             MsgTool.msgSend(session,"heart message");
                         }else
                             MsgTool.msgRead(session, msg);
