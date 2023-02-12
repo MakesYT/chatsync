@@ -1,13 +1,12 @@
 package top.ncserver.chatsync.V2;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import kotlin.text.Charsets;
 import net.mamoe.mirai.event.GlobalEventChannel;
 import net.mamoe.mirai.event.events.GroupMessageEvent;
-import net.mamoe.mirai.message.data.At;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.PlainText;
-import net.mamoe.mirai.message.data.QuoteReply;
+import net.mamoe.mirai.message.data.*;
 import net.mamoe.mirai.utils.ExternalResource;
 import org.smartboot.socket.transport.AioSession;
 import org.smartboot.socket.transport.WriteBuffer;
@@ -17,7 +16,16 @@ import top.ncserver.chatsync.Until.TextToImg;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.CookieManager;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Base64;
 import java.util.HashMap;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,7 +35,13 @@ import static top.ncserver.chatsync.Until.ColorCodeCulling.CullColorCode;
 
 public class MsgTools {
     static Pattern p = Pattern.compile("[(/+)\u4e00-\u9fa5(+*)]");
-    public static void listenerInit(){
+    static HttpClient client;
+    public  static void listenerInit(){
+        client = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(Duration.ofSeconds(2))
+                .cookieHandler(new CookieManager())
+                .build();
         GlobalEventChannel.INSTANCE.subscribeAlways(GroupMessageEvent.class, (event) -> {
             if (Config.INSTANCE.getGroupID()==0L&&event.getSender().getPermission().getLevel()>=1&&event.getMessage().contentToString().equals("/chatsync bind this")){
                 Config.INSTANCE.setGroupID(event.getGroup().getId());
@@ -74,38 +88,86 @@ public class MsgTools {
                         }
                     } else if (Config.INSTANCE.getSyncMsg())
                     {
-                        msg1.put("type","msg");
-                        msg1.put("permission",event.getSender().getPermission().getLevel());
-                        msg1.put("sender",event.getSenderName());
-                        String miraiCode=event.getMessage().toString();
-                        Chatsync.chatsync.getLogger().debug(miraiCode);
-                        StringBuilder msgBuilder=new StringBuilder();
-                        if (miraiCode.contains("[mirai:quote:["))
-                        {
-                            Chatsync.chatsync.getLogger().debug("catch");
+                        StringBuilder sb= new StringBuilder();
+                        JSONArray msg = JSON.parseArray(MessageChain.serializeToJsonString(event.getMessage()));
+                        if (event.getMessage().contains(QuoteReply.Key)){
                             QuoteReply quote = event.getMessage().get(QuoteReply.Key);
                             At at=new At(quote.getSource().getFromId());
+                            StringBuilder msgBuilder=new StringBuilder();
                             msgBuilder.append("\u00A75 回复了\n\u00A73");
                             msgBuilder.append(at.getDisplay(event.getGroup()).replaceFirst("@","["));
                             msgBuilder.append("]:");
-                            msgBuilder.append(quote.getSource().getOriginalMessage()+"\n\u2191---");
-                        }
-                        if (miraiCode.contains("[mirai:at:")){//at处理辣鸡Mirai BUG不修
-                            int t=0;
-                            while(miraiCode.indexOf("[mirai:at:",t)!=-1)
-                            {
-                                t=miraiCode.indexOf("[mirai:at:",t);
-                                long qqCode= Long.parseLong(miraiCode.substring(t+10,miraiCode.indexOf("]",t)));
-                                At at=new At(qqCode);
-                                msgBuilder.append(msgString.replaceFirst("@"+qqCode,at.getDisplay(event.getGroup())));
-                                t=miraiCode.indexOf("]",t);
-                            }
+                            msgBuilder.append(quote.getSource().getOriginalMessage());
+                            sb.append("\u2191---");
+                            msg1.put("type","remsg");
+                            msg1.put("permission",event.getSender().getPermission().getLevel());
+                            msg1.put("sender",event.getSenderName());
                             msg1.put("msg",msgBuilder);
-                        }else
-                            msg1.put("msg",msgString);
+                            JSONObject jo= new JSONObject(msg1);
+                            Chatsync.chatsync.getLogger().info(jo.toJSONString());
+                            msgSend(Chatsync.session,jo.toJSONString());
+                        }
+                        JSONArray originalMessage=((JSONObject)msg.get(0)).getJSONArray("originalMessage");
+                        msg1.clear();
+
+                        for (Object o : originalMessage) {
+                            System.out.println(((JSONObject) o).toJSONString());
+                            switch (((JSONObject)o).getString("type")){
+                                case "PlainText":{
+                                    sb.append(((JSONObject)o).getString("content"));
+                                    break;
+                                }
+                                case "At":{
+                                    At at=new At(((JSONObject)o).getLong("target"));
+                                    sb.append(at.getDisplay(event.getGroup()));
+                                    break;
+                                }
+                                case "AtAll":{
+                                    sb.append("@全体成员");
+                                    break;
+                                }
+                                case "Image":{
+                                    Image img=Image.fromId(((JSONObject)o).getString("imageId"));
+                                    HttpRequest request = HttpRequest.newBuilder()
+                                            .version(HttpClient.Version.HTTP_1_1)
+                                            .GET()
+                                            .timeout(Duration.ofSeconds(2))
+                                            .uri(URI.create(Image.queryUrl(img)))
+                                            .build();
+                                    try {
+                                        System.out.println(Image.queryUrl(img));
+                                        HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+
+                                        msg1.put("type","img");
+                                        msg1.put("permission",event.getSender().getPermission().getLevel());
+                                        msg1.put("sender",event.getSenderName());
+                                        msg1.put("data",Base64.getEncoder().encodeToString(response.body()));
+                                        JSONObject jo= new JSONObject(msg1);
+                                        Chatsync.chatsync.getLogger().info(jo.toJSONString());
+                                        msgSend(Chatsync.session,jo.toJSONString());
+                                    } catch (IOException | InterruptedException e) {
+                                        Chatsync.chatsync.getLogger().info("图片请求失败");
+                                    }
+                                    break;
+                                }
+                                case "QuoteReply":{
+                                    break;
+                                }
+                                default:{
+
+                                    MessageChain messageChain= MessageChain.deserializeFromJsonString("["+((JSONObject)o).toJSONString()+"]");
+                                    sb.append(messageChain.get(0).contentToString());
+                                }
+                            }
+                        }
+                        msg1.put("type","msg");
+                        msg1.put("permission",event.getSender().getPermission().getLevel());
+                        msg1.put("sender",event.getSenderName());
+                        msg1.put("msg",sb);
                         JSONObject jo= new JSONObject(msg1);
                         Chatsync.chatsync.getLogger().info(jo.toJSONString());
                         msgSend(Chatsync.session,jo.toJSONString());
+
                     }
 
                 }

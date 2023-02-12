@@ -1,0 +1,86 @@
+[
+  {
+    "type": "MessageSource",
+    "kind": "GROUP",
+    "botId": 1502150634,
+    "ids": [
+      3821
+    ],
+    "internalIds": [
+      2056911210
+    ],
+    "time": 1676172986,
+    "fromId": 748436276,
+    "targetId": 599644561,
+    "originalMessage": [
+      {
+        "type": "QuoteReply",
+        "source": {
+          "kind": "GROUP",
+          "botId": 1502150634,
+          "ids": [
+            3816
+          ],
+          "internalIds": [
+            497107640
+          ],
+          "time": 1676172367,
+          "fromId": 1502150634,
+          "targetId": 599644561,
+          "originalMessage": [
+            {
+              "type": "PlainText",
+              "content": "服务器有了,别问我几个月的,我也不知道"
+            },
+            {
+              "type": "Face",
+              "id": 178
+            }
+          ]
+        }
+      },
+      {
+        "type": "At",
+        "target": 1502150634
+      },
+      {
+        "type": "PlainText",
+        "content": " 222"
+      }
+    ]
+  },
+  {
+    "type": "QuoteReply",
+    "source": {
+      "kind": "GROUP",
+      "botId": 1502150634,
+      "ids": [
+        3816
+      ],
+      "internalIds": [
+        497107640
+      ],
+      "time": 1676172367,
+      "fromId": 1502150634,
+      "targetId": 599644561,
+      "originalMessage": [
+        {
+          "type": "PlainText",
+          "content": "服务器有了,别问我几个月的,我也不知道"
+        },
+        {
+          "type": "Face",
+          "id": 178
+        }
+      ]
+    }
+  },
+  {
+    "type": "At",
+    "target": 1502150634
+  },
+  {
+    "type": "PlainText",
+    "content": " 222"
+  }
+]

@@ -40,7 +40,7 @@ public class SendPack {
     }
     public void handler(Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
-            LOGGER.info(this.message);
+            //LOGGER.info(this.message);
             String json = this.message.substring(this.message.indexOf("{"));
             json = json.substring(0, this.message.lastIndexOf("}")+1);
             //System.out.println(json);
@@ -67,6 +67,8 @@ public class SendPack {
                         }
                     }
                     NativeImage nativeImage=NativeImage.read(new ByteArrayInputStream(b));
+                    img.setWidthAndHeight(nativeImage.getWidth(),nativeImage.getHeight());
+                    ChatImg.imgMap.replace(imgID,img);
                     Minecraft.getInstance().getTextureManager().loadTexture(F,new DynamicTexture(nativeImage));
 
                 }
