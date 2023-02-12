@@ -1,0 +1,3 @@
+[submodule "mods/forge"]
+	path = mods/forge
+	url = https://github.com/MakesYT/chatsync
