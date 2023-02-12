@@ -1,3 +1,6 @@
 [submodule "mods/forge"]
 	path = mods/forge
 	url = https://github.com/MakesYT/chatsync_mods_forge
+[submodule "mirai"]
+	path = mirai
+	url = https://github.com/MakesYT/chatsync_mirai
