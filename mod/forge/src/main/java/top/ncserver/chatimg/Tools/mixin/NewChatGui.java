@@ -81,10 +81,23 @@ public abstract class NewChatGui  extends AbstractGui {
     private boolean isScrolled;
 
     @Shadow @Final private List<ChatLine<ITextComponent>> chatLines;
-    @Shadow
-    public abstract void addScrollPos(double posInc);
-    private static String pattern = "\\[ImgID=(.+)\\]";
-    private static Pattern patternP = Pattern.compile("\\[ImgID=(.+)\\]");
+    private static final String pattern = "\\[ImgID=(.+)\\]";
+    private static final Pattern patternP = Pattern.compile("\\[ImgID=(.+)\\]");
+    /**
+     * @author
+     * @reason
+     */
+    @Overwrite
+    public void addScrollPos(double posInc) {
+        this.scrollPos = (int)((double)this.scrollPos + posInc);
+        if (this.scrollPos>this.drawnChatLines.size()-3)
+            this.scrollPos=this.drawnChatLines.size()-3;
+        if (this.scrollPos <= 0) {
+            this.scrollPos = 0;
+            this.isScrolled = false;
+        }
+
+    }
 
     /**
      * @author
@@ -97,10 +110,7 @@ public abstract class NewChatGui  extends AbstractGui {
             int i = this.getLineCount();
             int j = this.drawnChatLines.size();
             if (j > 0) {
-                boolean flag = false;
-                if (this.getChatOpen()) {
-                    flag = true;
-                }
+                boolean flag = this.getChatOpen();
 
                 double d0 = this.getScale();
                 int k = MathHelper.ceil((double)this.getChatWidth() / d0);
@@ -115,7 +125,7 @@ public abstract class NewChatGui  extends AbstractGui {
                 int indexY= (int) ((double)(-this.getLineCount()) * d3)+getChatHeight();
 
                 for (int u=0;;u++){
-
+                   // System.out.println(this.scrollPos);
                     if (indexY<=-getChatHeight()||u>this.drawnChatLines.size()-1||u+ this.scrollPos>this.chatLines.size()-1){
                         break;
                     }
@@ -133,38 +143,48 @@ public abstract class NewChatGui  extends AbstractGui {
                             if (json.contains("[ImgID=")) {
                                 Matcher matcher = patternP.matcher(json);
                                 int imgID=-1;
-                                if (matcher.find()) {
-                                   imgID= Integer.parseInt((matcher.group(0)).split("=")[1].replace("]",""));
-                                }
                                 try {
-
+                                    if (matcher.find()) {
+                                       imgID= Integer.parseInt((matcher.group(0)).split("=")[1].replace("]",""));
+                                    }
                                     Img img= ChatImg.imgMap.get(imgID);
                                     if (img.allReceived()){
                                         p_238492_1_.push();
                                         p_238492_1_.translate(0.0D, 0.0D, 50.0D);
-                                        fill(p_238492_1_, -2, indexY+9, k + 4, indexY-64+9, i2 << 24);
+                                        fill(p_238492_1_, -2, indexY+9, k + 4, indexY-img.getHeight()+9, i2 << 24);
                                         RenderSystem.enableBlend();
                                         p_238492_1_.translate(0.0D, 0.0D, 50.0D);
                                         //this.mc.fontRenderer.drawTextWithShadow(p_238492_1_, chatline.getLineString(), 0.0F, (float)((int)(d6 + d4)), 16777215 + (l1 << 24));
                                         ResourceLocation F=new ResourceLocation("chatimg","imgs/"+imgID);
-                                        RenderSystem.color4f(1.0F,1.0F,1.0F,1.0F);
+                                        RenderSystem.color4f(0.6F,0.6F,0.6F,0.6F);
                                         this.mc.getTextureManager().bindTexture(F);
-                                        blit(p_238492_1_,0, indexY-64+9 , 0, 0, 64, 64, 64, 64);
-
+                                        blit(p_238492_1_,0, indexY-img.getHeight()+9 , 0, 0, img.getWidth(), img.getHeight(), img.getWidth(), img.getHeight());
+                                        //addScrollPos((int)(img.getHeight()/9));
                                         //System.out.println("g");
                                         p_238492_1_.pop();
                                         RenderSystem.disableAlphaTest();
                                         RenderSystem.disableBlend();
-                                        indexY-=64;
+                                        indexY-=img.getHeight();
 
-                                    }else{
-                                        Minecraft.getInstance().player.sendMessage(new StringTextComponent("[ChatImg]图片数据不完整,ImgID="+imgID), UUID.randomUUID());
                                     }
-                                }catch (Exception e) {}
+                                }catch (Exception e) {
+                                    int j2 = 0;
+                                    p_238492_1_.push();
+                                    p_238492_1_.translate(0.0D, 0.0D, 50.0D);
+                                    fill(p_238492_1_, -2,indexY, k + 4, indexY+9, i2 << 24);
+                                    RenderSystem.enableBlend();
+                                    p_238492_1_.translate(0.0D, 0.0D, 50.0D);
+                                    this.mc.fontRenderer.drawTextWithShadow(p_238492_1_, chatline.getLineString(), 0.0F, indexY, 16777215 + (l1 << 24));
+                                    p_238492_1_.pop();
+                                    RenderSystem.disableAlphaTest();
+                                    RenderSystem.disableBlend();
+                                    indexY-=9;
+                                }
 
 
 
-                            }else{
+                            }
+                            else{
                                 int j2 = 0;
                                 p_238492_1_.push();
                                 p_238492_1_.translate(0.0D, 0.0D, 50.0D);

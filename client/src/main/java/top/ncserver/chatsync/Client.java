@@ -94,7 +94,7 @@ public class Client extends BukkitRunnable {
             }
             connection(config.getString("ip"), config.getInt("port"));
         }
-        //logger.info("1");
+        logger.info("重连线程已关闭");
         this.cancel();
     }
 }

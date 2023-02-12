@@ -7,7 +7,7 @@ import net.minecraftforge.fml.network.simple.SimpleChannel;
 public class Networking {
     public static SimpleChannel INSTANCE;
     public static final String VERSION = "ABSENT \uD83E\uDD14";
-    private static int ID = 6969;
+    private static final int ID = 6969;
 
 
 

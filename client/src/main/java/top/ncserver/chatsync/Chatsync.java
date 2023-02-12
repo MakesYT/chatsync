@@ -76,12 +76,13 @@ public class Chatsync extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
+        c.cancel();
         try {
             Client.session.close();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        c.cancel();
+
     }
 
     @Override

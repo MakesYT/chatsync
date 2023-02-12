@@ -19,31 +19,31 @@ public abstract class ChatScreen extends Screen {
     private CommandSuggestionHelper commandSuggestionHelper;
     @Shadow
     private String defaultInputFieldText = "";
+
+    protected ChatScreen(ITextComponent titleIn) {
+        super(titleIn);
+    }
     /**
      * @author
      * @reason
      */
-    public ChatScreen(String defaultText) {
-        super(NarratorChatListener.EMPTY);
-        this.defaultInputFieldText = defaultText;
-    }
-
     /**
      * @author
      * @reason
      */
     @Overwrite
-    public  void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
-        this.setListener(this.inputField);
-        this.inputField.setFocused2(true);
-        fill(matrixStack, 2, this.height - 14, this.width - 2, this.height - 2, this.minecraft.gameSettings.getChatBackgroundColor(Integer.MIN_VALUE));
-        this.inputField.render(matrixStack, mouseX, mouseY, partialTicks);
-        this.commandSuggestionHelper.drawSuggestionList(matrixStack, mouseX, mouseY);
-        Style style = this.minecraft.ingameGUI.getChatGUI().func_238494_b_((double)mouseX, (double)mouseY);
-        if (style != null && style.getHoverEvent() != null) {
-            this.renderComponentHoverEffect(matrixStack, style, mouseX, mouseY);
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (delta > 1.0D) {
+            delta = 1.0D;
         }
 
-        super.render(matrixStack, mouseX, mouseY, partialTicks);
+        if (delta < -1.0D) {
+            delta = -1.0D;
+        }
+
+        if (!this.commandSuggestionHelper.onScroll(delta)) {
+            this.minecraft.ingameGUI.getChatGUI().addScrollPos(delta);
+        }
+        return true;
     }
 }
