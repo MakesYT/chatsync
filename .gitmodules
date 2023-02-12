@@ -4,3 +4,6 @@
 [submodule "mirai"]
 	path = mirai
 	url = https://github.com/MakesYT/chatsync_mirai
+[submodule "plugins/bukkit"]
+	path = plugins/bukkit
+	url = https://github.com/MakesYT/chatsync_bukkit
