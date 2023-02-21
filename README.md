@@ -18,6 +18,6 @@ https://github.com/MakesYT/chatsync_mirai
 ## Bukkit
 https://github.com/MakesYT/chatsync_bukkit
 
-## Mods
+## Mods(仅客户端)
 ### Forge(1.16.5)
 https://github.com/MakesYT/chatsync_mods_forge
