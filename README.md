@@ -19,5 +19,7 @@ https://github.com/MakesYT/chatsync_mirai
 https://github.com/MakesYT/chatsync_bukkit
 
 ## Mods(仅客户端)
+### DLL(Windows)
+https://github.com/MakesYT/chatimg_dll/
 ### Forge(1.16.5)
 https://github.com/MakesYT/chatsync_mods_forge
