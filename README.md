@@ -8,6 +8,8 @@
 
 在Gitbook查看完整的Wiki/安装教程
 
+注意:Github中内容很可能显示异常
+
 [https://makesyt.gitbook.io/ncharge-cha-jian/](https://makesyt.gitbook.io/ncharge-cha-jian/)
 
 {% content-ref url="./" %}
@@ -16,22 +18,24 @@
 
 ### Mirai
 
-https://github.com/MakesYT/chatsync\_mirai
+{% embed url="https://github.com/MakesYT/chatsync_mirai/" %}
+
+
 
 ### Bukkit
 
-https://github.com/MakesYT/chatsync\_bukkit
+{% embed url="https://github.com/MakesYT/chatsync_bukkit" %}
 
 ### Mods(仅客户端)
 
 #### DLL(Windows)
 
-https://github.com/MakesYT/chatimg\_dll/
+{% embed url="https://github.com/MakesYT/chatimg_dll/" %}
 
 #### Forge(1.12.2/1.16.5/1.19.2)
 
-https://github.com/MakesYT/chatsync\_mods\_forge
+{% embed url="https://github.com/MakesYT/chatsync_mods_forge" %}
 
 #### Fabric
 
-https://github.com/MakesYT/chatsync\_mods\_fabric
+{% embed url="https://github.com/MakesYT/chatsync_mods_fabric" %}
