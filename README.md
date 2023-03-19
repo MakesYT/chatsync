@@ -8,7 +8,11 @@
 
 在Gitbook查看完整的Wiki/安装教程
 
+[https://makesyt.gitbook.io/ncharge-cha-jian/](https://makesyt.gitbook.io/ncharge-cha-jian/)
 
+{% content-ref url="./" %}
+[.](./)
+{% endcontent-ref %}
 
 ### Mirai
 
