@@ -17,7 +17,7 @@
 下载群文件中代扫描登录字样的压缩包,有无java版和含Java(win)版,注意使用Java11
 
 1. 运行mcl并等待加载完成
-2. 如出现类似字样请在参数末尾加上-uu
+2. 如出现类似字样请在参数末尾加上-u
 3.
 
     <figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption></figcaption></figure>
