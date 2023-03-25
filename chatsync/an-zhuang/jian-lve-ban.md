@@ -18,7 +18,7 @@
 
 ### 图片支持
 
-<figure><img src="../../.gitbook/assets/image.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/image (1) (1).png" alt=""><figcaption></figcaption></figure>
 
 1. 添加此功能非常简单,只需要在客户端中安装对应版本的mod即可
 2. 如果需要发送图片,需要先复制图片到剪贴板,然后调出聊天框,按下Ctrl+V即可
