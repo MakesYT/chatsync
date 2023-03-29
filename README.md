@@ -21,5 +21,7 @@ https://github.com/MakesYT/chatsync_bukkit
 ## Mods(仅客户端)
 ### DLL(Windows)
 https://github.com/MakesYT/chatimg_dll/
-### Forge(1.16.5)
+### Forge(1.12.2/1.16.5/1.19.2)
 https://github.com/MakesYT/chatsync_mods_forge
+### Fabric
+https://github.com/MakesYT/chatsync_mods_fabric
