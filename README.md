@@ -1,16 +1,16 @@
-# chatsync
+# chatsync(插件\&MOD)
 
 ## chatsync
 
 让QQ与Minecraft聊天同步,包括图片和绝大多数消息
 
 ### 为数不多的图片显示功能,真正实现消息同步显示
-![image](https://user-images.githubusercontent.com/42534870/227779571-6564efc7-a7cb-4cf1-8bab-eff9bad492c3.png)
 
+![image](https://user-images.githubusercontent.com/42534870/227779571-6564efc7-a7cb-4cf1-8bab-eff9bad492c3.png)
 
 在Gitbook查看完整的Wiki/安装教程,或者加入插件交流群528780955
 
-注意:Github中内容很可能显示异常
+### 注意:Github中内容很可能显示异常,请前往下面的链接查看
 
 [https://makesyt.gitbook.io/ncharge-cha-jian/](https://makesyt.gitbook.io/ncharge-cha-jian/)
 
@@ -21,8 +21,6 @@
 ### Mirai
 
 {% embed url="https://github.com/MakesYT/chatsync_mirai/" %}
-
-
 
 ### Bukkit
 
